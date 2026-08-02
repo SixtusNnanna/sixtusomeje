@@ -1,0 +1,7 @@
+.env
+venv
+migrations
+
+alembic.ini
+**/*__pychace__
+**/* __pytest_code__

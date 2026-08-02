@@ -18,12 +18,6 @@ def generate_sku(name: str, created_on: date | None = None) -> str:
     return f"{name_part}-{date_part}-{suffix}"
 
 
-class Period(str, Enum):
-    WEEKLY = "weekly"
-    MONTHLY = "monthly"
-    YEARLY = "yearly"
-
-
 def create_access_token(payload: dict, expiry: timedelta | None = None):
     to_encode = payload.copy()
     expire = datetime.now(timezone.utc) + \

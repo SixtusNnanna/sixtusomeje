@@ -30,6 +30,5 @@ class ProductService(BaseService[Product]):
     async def delete_product(self, product_id: int) -> bool:
         product = await self.get_product(product_id=product_id)
         if not product:
-            return False
+            raise ValueError(f"Product with ID {product_id} does not exist.")
         return await self.delete(id=product_id)
-

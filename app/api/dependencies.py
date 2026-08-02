@@ -8,6 +8,7 @@ from app.databaase.models import User
 from app.core.security import oauth2_scheme
 from app.utlis import decode_access_token
 from app.services.products import ProductService
+from app.services.customer import CustomerService
 
 
 SessionDps = Annotated[AsyncSession, Depends(get_async_session)]
@@ -67,5 +68,12 @@ async def get_admin_user(
     return current_user
 
 AdminUserDeps = Annotated[User, Depends(get_admin_user)]
+
+
+def get_cusomter_service(session: SessionDps) -> CustomerService:
+    return CustomerService(session=session)
+
+
+CustomerServiceDeps = Annotated[CustomerService, Depends(get_cusomter_service)]
 
 

@@ -10,9 +10,12 @@ dependencies = [
     "fastapi>=0.141.1",
     "passlib[argon2]>=1.7.4",
     "phonenumbers>=9.0.36",
-    "pydantic-extra-types>=2.11.1",
+    "pydantic-extra-types[phonenumbers]>=2.11.1",
     "pydantic-settings>=2.14.2",
+    "pydantic[email]>=2.13.4",
     "python-dotenv>=1.2.2",
     "python-jose>=3.5.0",
+    "python-multipart>=0.0.32",
     "sqlalchemy>=2.0.51",
+    "uvicorn>=0.52.1",
 ]
