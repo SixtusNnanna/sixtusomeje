@@ -1,4 +1,4 @@
-from app.configconfig import db_settings
+from app.config import db_settings
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
