@@ -14,7 +14,7 @@ load_dotenv()
 class DBSettings(BaseSettings):
     POSTGRES_SERVER: str
     POSTGRES_USER: str
-    POSTGRES_PASSWORD: str = ""
+    POSTGRES_PASSWORD: str 
     POSTGRES_DATABASE: str
     POSTGRES_PORT: int
 

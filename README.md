@@ -1,400 +1,153 @@
-# Backend Engineering Assessment
-Role: Backend Software Engineer (Python/Django)
-
-## Objective
-
-This assessment is designed to evaluate more than your ability to write code.
-
-We are interested in understanding how you think as an engineer.
-
-The project evaluates:
-
-- Software engineering principles
-- Problem-solving ability
-- Critical thinking
-- Database design and normalization
-- Backend architecture
-- API design
-- Business logic modelling
-- Authentication & authorization
-- Code quality and maintainability
-- Performance optimization
-- Error handling
-- Testing approach
-- Documentation
-- Git usage
-- Ability to make good engineering decisions
-- Scalability considerations
+# Habit Tracker API
 
 
-# Duration
+An async backend API for ecommerce platform — built with **FastAPI**, **async SQLAlchemy**, and **JWT authentication**.
 
-## 4 Days
-
-Submission Deadline:
-## 04/08/2026 
-
-# Project
-
-## Inventory & Order Management System
-
-Build a REST API for a company that manages products, warehouses, customers and orders.
-
-There are multiple warehouses.
-
-Products can exist in multiple warehouses with different stock quantities.
-
-Customers place orders.
-
-Orders should only succeed if inventory is available.
-
-# Functional Requirements
-
-## Authentication
-
-Implement authentication.
-
-You may choose:
-
-- Django Authentication
-- JWT
-- Session Authentication
-
-Users have roles:
-
-- Admin
-- Staff
-
-Only authenticated users should access APIs.
-
-# Product Module
-
-A product has:
-
-- Name
-- SKU (must be unique)
-- Description
-- Unit Price
-- Status (Active/Inactive)
-
-Operations:
-
-- Create
-- Update
-- Delete
-- List
-- Retrieve
+**Live demo:** https://boma-project-2-0.onrender.com/docs
+**Repo:** `https://github.com/sixtusNnanna/SixtusOmeje`
 
 ---
 
-# Warehouse Module
+## What it does
 
-Warehouse contains:
+Think of it as the backend engine behind a ecommerce platform like amazon and co — the part that stores data, enforces rules, and exposes an API for a frontend (or Swagger UI) to consume.
 
-- Name
-- Address
-- Manager Name
-
-Operations:
-
-- CRUD
-
-# Inventory Module
-
-Each warehouse stores products.
-
-Inventory contains:
-
-- Warehouse
-- Product
-- Quantity Available
-- Minimum Stock Level
-
-Operations:
-
-- Increase Stock
-- Reduce Stock
-- Transfer Stock Between Warehouses
-
-# Customer Module
-
-Customer contains:
-
-- Full Name
-- Email
-- Phone Number
-
-Operations:
-
-- CRUD
-
-# Order Module
-
-Customers place orders.
-
-Each order contains:
-
-- Customer
-- Multiple Products
-- Quantity
-- Selling Price
-- Order Date
-- Status
-
-Statuses:
-
-- Pending
-- Processing
-- Completed
-- Cancelled
-
-# Business Rules
-
-### Rule 1
-
-Order cannot be completed if stock is insufficient.
-
-### Rule 2
-
-Inventory should reduce automatically after successful order completion.
-
-### Rule 3
-
-Cancelling a completed order should restore inventory.
-
-### Rule 4
-
-Duplicate SKU should never exist.
-
-### Rule 5
-
-Deleting a product with existing orders should not be allowed.
-
-### Rule 6
-
-Warehouse inventory should never become negative.
-
-# Reporting APIs
-
-Create endpoints for:
-
-- Top selling products
-- Products with low stock
-- Total inventory value
-- Orders by status
-- Daily sales summary
-
-# Search & Filtering
-
-Support:
-
-- Product search
-- Customer search
-- Order filtering
-- Warehouse filtering
-
-Pagination required.
-
-# API Documentation
-
-Use either:
-
-- Swagger
-- DRF Spectacular
-- Postman Collection
-
-# Validation
-
-Examples:
-
-- Email validation
-- Phone validation
-- Price cannot be negative
-- Quantity must be greater than zero
-- SKU uniqueness
-
-# Error Handling
-
-Use meaningful HTTP status codes.
-
-Consistent error responses.
-
-Handle edge cases.
-
-# Bonus Challenges (Medium)
-
-Choose as many as possible.
-
-### 1.
-
-Implement soft delete.
-
-### 2.
-
-Audit log for important actions.
-
-Examples:
-
-- Product created
-- Stock updated
-- Order completed
-
-### 3.
-
-Bulk import products using CSV.
-
-### 4.
-
-Export orders to CSV.
-
-### 5.
-
-Implement caching for product listing.
-
-### 6.
-
-Dockerize the application.
+a is strictly scoped per user — no user can ever read, edit, or delete another user's data
 
 ---
 
-### 7.
+## Tech stack
 
-Background task for sending email after order completion.
-
-(Celery or Django-Q)
-
-# Advanced Challenges (Hard)
-
-These intentionally test engineering maturity.
-
-## Challenge 1
-
-Prevent race conditions.
-
-Example:
-
-Two users place an order simultaneously.
-
-Inventory must remain correct.
-
-## Challenge 2
-
-Use database transactions properly.
-
-No partial updates should occur.
+| Layer | Choice |
+|---|---|
+| Framework | FastAPI (async) |
+| ORM | SQLAlchemy 2.0 (async, `Mapped[]` style) |
+| Database | PostgreSQL (async, via `asyncpg`) |
+| Migrations | Alembic |
+| Auth | JWT (HS256) via `python-jose`, password hashing via `passlib` |
+| Validation | Pydantic v2 |
 
 
-## Challenge 3
+---
 
-Design the database to avoid redundancy.
+## Architecture
 
-Explain your modelling decisions.
+```
+app/
+├── api/
+    ├── v1/
+        ├── endpoints/  # Route handlers (thin — delegate to services)
+        ├── base.py/    #base endpoint
+│   ├── routers/
+│   ├── schemas/         # Pydantic request/response models
+│   └── dependencies.py  # Shared FastAPI dependencies (auth, DB session)
+├── core/
+│   ├── security.py      # JWT creation/verification, password hashing
+│   └── enum.py        # Handle the Enum Types
+├── database/
+│   ├── models.py         # SQLAlchemy models (User, Habit, HabitLog)
+│   ├── base.py            # Declarative base
+│   └── session.py         # Async engine + session factory
+├── services/              # Business logic — one service per resource
+│   ├── base.py             # Generic CRUD service (Generic[ModelType])
+│   ├── customer.py
+│   ├── inventory.py
+│   ├── order.py
+│   ├── product.py
+│   ├── user.py
+│   └── warehouse.py
+├── config.py                   # Environment-driven settings
+├── exceptions.py              #Customer Exceptions
+├── main.py                   # App entrypoint, startup lifecycle
+└── utils.py                  # other utilies eg (access token creation and decode)
+```
 
-## Challenge 4
+**Design principles followed throughout:**
+- **Thin routers, fat services** — routes handle HTTP concerns only (status codes, request/response shape); all business logic lives in services.
+- **Ownership scoping at the query level** — every fetch/update/delete filters by the requesting user's ID directly in the SQL `WHERE` clause, not via a fetch-then-check pattern. A user requesting another user's resource gets an identical `404` to a resource that doesn't exist — no information leakage about what IDs exist.
+- **Services raise `CustomerErrors`, never `HTTPException`** — keeps business logic decoupled from the HTTP layer; routes translate exceptions into the appropriate status codes.
+- **Derived data over stored data** — completion rates, due-days, and streaks are computed live from raw logs + habit schedules rather than cached/duplicated, keeping the data model minimal and always consistent.
 
-Write an endpoint that returns:
+---
 
-Warehouse Performance Dashboard
+## Key features
 
-Example:
+### Authentication & security
+- Signup with password strength validation (Pydantic `field_validator`)
 
-```json
-{
-    "warehouse": "Lagos",
-    "products": 250,
-    "inventory_value": 4000000,
-    "low_stock": 12,
-    "orders_fulfilled": 125
-}
-````
+- JWT-based login (HS256)
+- Passwords hashed with `passlib` (bcrypt)
 
-## Challenge 5
 
-Optimize slow queries.
+### Analytics
+- Due-day and completion-rate calculation over arbitrary date ranges
+- Week-over-week and month-over-month completion trend comparison
 
-Use:
+---
 
-* select_related
-* prefetch_related
+## Assumptions Made
 
-where appropriate.
+- I introduced an order_item table that handles individaul order, it relates with order in a One to many relationship
 
-## Challenge 6
+- A linking table between order item, that helps allocate the quantity from several inventory containing the item ordered
 
-Implement optimistic or pessimistic locking where necessary.
 
-# Testing
 
-Write unit tests for critical business logic.
+## Getting started
 
-Minimum:
+**Prerequisites:** This project uses Docker Compose to manage application and its variables.
+Make sure you have installed
+- Docker
+- Docker Compose
 
-* Order creation
-* Stock deduction
-* Stock restoration
-* Authentication
+```bash
+⚙️ 2. Environment Variables
 
-# What We Will Evaluate
+Create a .env file in the root directory and add your configuration:
 
-We are **not** looking for the project with the most features.
+DATABASE_URL=postgresql+asyncpg://user:password@host:5432/dbname
+SECRET_KEY=your_secret_key
+ALGORITHM=HS256
 
-We are looking for engineers who make thoughtful technical decisions.
+p▶️ 3. Start the Application
 
-Evaluation criteria:
+Run the following command:
 
-| Area                  | Weight |
-| --------------------- | ------ |
-| Database Design       | 20%    |
-| Business Logic        | 20%    |
-| Software Architecture | 15%    |
-| Code Quality          | 15%    |
-| Critical Thinking     | 10%    |
-| API Design            | 5%     |
-| Security              | 5%     |
-| Performance           | 5%     |
-| Documentation         | 5%     |
+docker-compose up --build
 
-# Submission Requirements
+Or (recommended for background mode):
 
-Submit a GitHub repository containing:
+🌐 4. Access the Application
 
-* Complete source code
-* README.md
-* API documentation
-* ER Diagram
-* Database schema explanation
-* Setup instructions
-* Sample `.env.example`
-* Postman Collection (optional)
+Open your browser:
 
-# README Should Include
+http://localhost:8000
 
-* Project overview
-* Assumptions made
-* Architecture decisions
-* Third-party packages used
-* Challenges encountered
-* Future improvements
+Swagger docs:
 
-# Extra Credit
+http://localhost:8000/docs
+```
 
-These are not required but will distinguish exceptional candidates.
+---
 
-* CI/CD (GitHub Actions)
-* Type hints throughout the project
-* Linting (Ruff/Flake8)
-* Formatting (Black)
-* Pre-commit hooks
-* Logging
-* Rate limiting
-* API versioning
-* OpenAPI documentation
-* Health check endpoint
-* Monitoring-ready architecture
+## Third party packes
+- Pydantic for type validation
+- pydantic-email for email validation
+- pydantic-other_types phone for
 
-# Notes
+## Challenges Encountered
+- Not able to implement the seletin lazy
+- not able to deploy on vercel
 
-You are free to make reasonable assumptions where requirements are ambiguous.
-Document every major engineering decision.
-We value clean architecture, maintainability, correctness, and thoughtful design more than the sheer number of implemented features.
 
+---
+
+## Future improvement
+- Implement seletin lazy to select related tables
+- CI/CID
+- The remaining endpoints(currently working on them)
+---
+
+## Author
+
+Sixtus Omeje
