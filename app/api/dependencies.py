@@ -93,9 +93,9 @@ def get_inventory_service(session: SessionDps):
 InventoryDeps = Annotated[InventoryService, Depends(get_inventory_service)]
 
 
-def get_order)service(session: SessionDps, inventory=InventoryDeps):
-    return OrderService(session=session, inventory=inventory)
+def get_order_service(session: SessionDps, inv: InventoryDeps):
+    return OrderService(session=session, inventory=inv)
 
 
-OrderDeps = Annoted[OrderService, Depends(get_order_service)]
+OrderDeps = Annotated[OrderService, Depends(get_order_service)]
 

@@ -98,7 +98,8 @@ class Order(Base):
     )
     customer: Mapped["Customer"] = relationship(back_populates="orders")
     order_items: Mapped[list["OrderItem"]] = relationship(
-        back_populates="order", cascade="all, delete-orphan"
+        back_populates="order", cascade="all, delete-orphan",
+        lazy="selectin"
     )
 
 
@@ -113,5 +114,5 @@ class OrderItem(Base):
     quantity: Mapped[int] = mapped_column(Integer)
     unit_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
     order: Mapped["Order"] = relationship(back_populates="order_items")
-    product: Mapped["Product"] = relationship(back_populates="order_items")
+    product: Mapped["Product"] = relationship(back_populates="order_items", lazy="selectin")
     allocations: Mapped["OrderItemAllocation"] = relationship(back_populates="order_item")

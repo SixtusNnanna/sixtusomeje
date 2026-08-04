@@ -5,6 +5,7 @@ from app.api.v1.endpoints.products import router as product_router
 from app.api.v1.endpoints.customer import router as customer_router
 from app.api.v1.endpoints.warehouse import router as warehouse_router
 from app.api.v1.endpoints.inventory import router as inventory_router
+from app.api.v1.endpoints.order import router as order_router
 
 
 
@@ -13,4 +14,5 @@ router.include_router(user_router, prefix="/api/v1/users", tags=["Users"])
 router.include_router(product_router, prefix="/api/v1/products", tags=["Products"])
 router.include_router(customer_router, prefix="/api/v1/customers", tags=["Customer"])
 router.include_router(warehouse_router, prefix="/api/v1/warehouses", tags=["WareHouse"])
-router.include_router(inventory_router, prefix="/api/v1/inventory", tags=["Inventory"] )
+router.include_router(inventory_router, prefix="/api/v1/inventories", tags=["Inventory"] )
+router.include_router(order_router, prefix="/api/v1/orders", tags=["Order"])

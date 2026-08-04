@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import Optional
 from app.core.enum import Role
 
@@ -17,4 +17,4 @@ class UserResponse(UserBase):
     role: Role = Role.staff
 
     class Config:
-        orm_mode = True
+        model_config = ConfigDict(from_attributes=True)

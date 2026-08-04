@@ -1,6 +1,5 @@
 from app.databaase.models import Order, OrderItem, OrderItemAllocation
-from app.api.schemas.order import OrderCreate
-from app.api.schemas.order_item import OrderItemCreate
+from app.api.schemas.order import OrderCreate, OrderItemCreate
 from app.services.base import BaseService
 from app.services.inventory import InventoryService
 from app.core.enum import OrderStatus
@@ -8,21 +7,23 @@ from decimal import Decimal
 
 
 class OrderService(BaseService[Order]):
-    def __init__(self, session):
+    def __init__(self, session, inventory: InventoryService):
         super().__init__(session, Order)
-        self.inventory = InventoryService
+        self.inventory = inventory
 
     async def create_order(self, order_create: OrderCreate):
         selling_price = Decimal(0)
         order = Order(
-            **order_create.model_dump(),
+            customer_id=order_create.customer_id,
+            order_date=order_create.order_date,
             status=OrderStatus.PENDING,
+            selling_price=1
 
         )
         self.session.add(order)
         await self.session.flush()
 
-        for item in order.order_items:
+        for item in order_create.order_items:
             item_total = item.unit_price * item.quantity
             selling_price += item_total
 
@@ -32,12 +33,13 @@ class OrderService(BaseService[Order]):
                 quantity=item.quantity,
                 unit_price=item.unit_price
             )
-            self.session.add(order_item)
+
+        self.session.add(order_item)
 
         order.selling_price = selling_price
 
         await self.session.commit()
-        await self.session.refresh(order)
+        await self.session.refresh(order, attribute_names=["order_items"])
         return order
 
     async def complete_order(self, order_id: int):
@@ -63,19 +65,3 @@ class OrderService(BaseService[Order]):
         await self.session.commit()
         await self.session.refresh(order)
         return order
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
