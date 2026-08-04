@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, Boolean, ForeignKey, Float
+from sqlalchemy import Integer, String, Boolean, ForeignKey, Float, UniqueConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy import Enum as SqlEnum
 from app.databaase.base import Base
@@ -52,9 +52,9 @@ class Warehouse(Base):
     manager_name: Mapped[str] = mapped_column(String)
     inventories: Mapped[list["Inventory"]] = relationship(back_populates="warehouse")
 
-
 class Inventory(Base):
     __tablename__ = "inventories"
+    __table_args__ = (UniqueConstraint("warehouse_id", "product_id", name="uq_warehouse_product"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     product_id: Mapped[int] = mapped_column(

@@ -18,7 +18,7 @@ class ProductService(BaseService[Product]):
 
     async def create_product(self, product_data: ProductCreate) -> Product:
         sku = generate_sku(product_data.name)
-        new_product = Product(sku=sku, **product_data.model_dump(exclude={"sku"}))
+        new_product = Product(sku=sku, **product_data.model_dump())
         return await self.add(new_product)
 
     async def update_product(

@@ -9,6 +9,8 @@ from app.core.security import oauth2_scheme
 from app.utlis import decode_access_token
 from app.services.products import ProductService
 from app.services.customer import CustomerService
+from app.services.warehouse import WareHouseService
+from app.services.inventory import InventoryService
 
 
 SessionDps = Annotated[AsyncSession, Depends(get_async_session)]
@@ -75,5 +77,18 @@ def get_cusomter_service(session: SessionDps) -> CustomerService:
 
 
 CustomerServiceDeps = Annotated[CustomerService, Depends(get_cusomter_service)]
+
+
+def get_warehouse_service(session: SessionDps):
+    return WareHouseService(session=session)
+
+
+WareHouseServicesDeps = Annotated[WareHouseService, Depends(get_warehouse_service)]
+
+def get_inventory_service(session: SessionDps):
+    return InventoryService(session=session)
+
+
+InventoryDeps = Annotated[InventoryService, Depends(get_inventory_service)]
 
 

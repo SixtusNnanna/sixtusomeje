@@ -16,7 +16,7 @@ async def signup(service: UserDeps, user_create: UserCreate):
     return await service.signup(user_create)
 
 
-@router.post("/auth/token", response_model=TokenData)
+@router.post("/auth/token", response_model=TokenData, status_code=201)
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     service: UserDeps
@@ -34,7 +34,7 @@ async def login(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me", response_model=UserResponse, status_code=200)
 async def get_me(user: CurrentUserDeps):
     return user
 

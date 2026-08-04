@@ -23,7 +23,7 @@ async def get_product(
     return await service.get(product_id)
 
 
-@router.post("/", response_model=ProductResponse, status_code=201)
+@router.post("/", response_model=ProductResponse)
 async def create_product(
     product_data: ProductCreate,
     service: ProductServiceDeps,
@@ -42,7 +42,7 @@ async def update_product(
     return await service.update_product(product_id, product_data)
 
 
-@router.delete("/{product_id}", status_code=204)
+@router.delete("/{product_id}")
 async def delete_product(
     product_id: int,
     service: ProductServiceDeps,
