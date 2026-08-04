@@ -5,7 +5,6 @@ from app.api.dependencies import InventoryDeps, CurrentUserDeps
 
 router = APIRouter()
 
-
 @router.get("/", response_model=list[InventoryResponse])
 async def inventory_list(offset: int, limit: int, service: InventoryDeps, user: CurrentUserDeps):
     return await service.list_inventory(offset, limit)

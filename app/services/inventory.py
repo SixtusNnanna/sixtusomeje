@@ -8,7 +8,7 @@ class InventoryService(BaseService[Inventory]):
     def __init__(self, session):
         super().__init__(session, Inventory)
 
-    async def get_available_product(self, product_id):
+    async def get_inventories_of_product(self, product_id):
         return await self.list(product_id=product_id)
 
     async def list_inventory(self, offset: int, limit: int):
@@ -95,6 +95,42 @@ class InventoryService(BaseService[Inventory]):
             "message": "Stock transferred successfully"
         }
 
+    async def get_lockable_stock_for_product(
+        self, product_id: int
+    ) -> list[Inventory]:
+        stmt = (
+            select(Inventory)
+            .where(
+                Inventory.product_id == product_id,
+                Inventory.quantity > 0,
+            )
+            .order_by(Inventory.quantity.desc())
+            .with_for_update()
+        )
+
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def allocate_stock(
+        self, product_id: int, quantity_needed: int
+    ) -> list[tuple[int, int]]:
+        candidates = await self.get_lockable_stock_for_product(product_id)
+
+        total_available = sum(inv.quantity for inv in candidates)
+        if total_available < quantity_needed:
+            raise ValueError("Insufficent Stock Available")
+
+        allocations: list[tuple[int, int]] = []
+        remaining = quantity_needed
+        for inv in candidates:
+            if remaining <= 0:
+                break
+            take = min(inv.quantity, remaining)
+            inv.quantity -= take
+            allocations.append((inv.warehouse_id, take))
+            remaining -= take
+
+        return allocations
 
 
 

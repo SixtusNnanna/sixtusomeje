@@ -1,8 +1,9 @@
-from sqlalchemy import Integer, String, Boolean, ForeignKey, Float, UniqueConstraint
+from sqlalchemy import Integer, String, Boolean, ForeignKey, UniqueConstraint, Numeric, CheckConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy import Enum as SqlEnum
 from app.databaase.base import Base
 from app.core.enum import Role, ProductStatus, OrderStatus
+from decimal import Decimal
 
 
 class User(Base):
@@ -35,7 +36,7 @@ class Product(Base):
     sku: Mapped[str] = mapped_column(String, unique=True, index=True)
     name: Mapped[str] = mapped_column(String, unique=True, index=True)
     description: Mapped[str] = mapped_column(String)
-    unit_price: Mapped[float] = mapped_column(Float)
+    unit_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
     status: Mapped[ProductStatus] = mapped_column(
         SqlEnum(ProductStatus), default=ProductStatus.ACTIVE
     )
@@ -51,6 +52,20 @@ class Warehouse(Base):
     address: Mapped[str] = mapped_column(String)
     manager_name: Mapped[str] = mapped_column(String)
     inventories: Mapped[list["Inventory"]] = relationship(back_populates="warehouse")
+
+
+class OrderItemAllocation(Base):
+    __tablename__ = "order_item_allocations"
+    __table_args__ =(
+        UniqueConstraint("order_item_id", "warehouse_id", name="uq_order_item_warehouse"),
+        CheckConstraint("quantity > 0", name="ck_allocation_quantity_positive"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    order_item_id = mapped_column(Integer, ForeignKey("order_items.id"))
+    warehouse_id = mapped_column(Integer, ForeignKey("warehouses.id"))
+    quantity: Mapped[int] = mapped_column(Integer)
+    order_item: Mapped["OrderItem"] = relationship(back_populates="allocations")
+    warehouse: Mapped["Warehouse"] = relationship()
 
 class Inventory(Base):
     __tablename__ = "inventories"
@@ -77,7 +92,7 @@ class Order(Base):
         Integer, ForeignKey("customers.id"), index=True
     )
     order_date: Mapped[str] = mapped_column(String)
-    selling_price: Mapped[float] = mapped_column(Float)
+    selling_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
     status: Mapped[OrderStatus] = mapped_column(
         SqlEnum(OrderStatus), default=OrderStatus.PENDING
     )
@@ -96,6 +111,7 @@ class OrderItem(Base):
         Integer, ForeignKey("products.id"), index=True
     )
     quantity: Mapped[int] = mapped_column(Integer)
-    unit_price: Mapped[float] = mapped_column(Float)
+    unit_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
     order: Mapped["Order"] = relationship(back_populates="order_items")
     product: Mapped["Product"] = relationship(back_populates="order_items")
+    allocations: Mapped["OrderItemAllocation"] = relationship(back_populates="order_item")

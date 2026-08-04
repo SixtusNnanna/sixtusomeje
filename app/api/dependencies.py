@@ -11,6 +11,7 @@ from app.services.products import ProductService
 from app.services.customer import CustomerService
 from app.services.warehouse import WareHouseService
 from app.services.inventory import InventoryService
+from app.services.order import OrderService
 
 
 SessionDps = Annotated[AsyncSession, Depends(get_async_session)]
@@ -91,4 +92,10 @@ def get_inventory_service(session: SessionDps):
 
 InventoryDeps = Annotated[InventoryService, Depends(get_inventory_service)]
 
+
+def get_order)service(session: SessionDps, inventory=InventoryDeps):
+    return OrderService(session=session, inventory=inventory)
+
+
+OrderDeps = Annoted[OrderService, Depends(get_order_service)]
 

@@ -68,3 +68,5 @@ class BaseService(Generic[ModelType]):
         result = await self.session.execute(sa_delete(self.model).filter_by(**filters))
         await self.session.commit()
         return result.rowcount > 0
+
+  
