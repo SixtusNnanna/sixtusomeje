@@ -48,5 +48,5 @@ class OrderRead(OrderBase):
     customer_id: int
     status: OrderStatus
     order_date: str
-    order_items: list[OrderItemRead]
+    # order_items: list[OrderItemRead]
     selling_price: Decimal

@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.databaase.models import Warehouse
 from app.services.base import BaseService
 from app.api.schemas.warehouse import WarehouseCreate, WarehouseUpdate
+from app.exceptions import NotFoundExcept, ExistException
 
 
 class WareHouseService(BaseService[Warehouse]):
@@ -16,6 +17,11 @@ class WareHouseService(BaseService[Warehouse]):
         return await self.list(offset, limit)
 
     async def add_warehouse(self, warehouse_data: WarehouseCreate):
+        existing_warehouse = await self.get_item(name=warehouse_data.name)
+        if existing_warehouse:
+            raise ExistException(
+                existing_warehouse.name
+            )
         new_warehouse = Warehouse(
             **warehouse_data.model_dump()
         )
@@ -25,12 +31,19 @@ class WareHouseService(BaseService[Warehouse]):
         return await self.get(warehouse_id)
 
     async def warehouse_update(self, warehouse_id: int, update_data: WarehouseUpdate):
+        existing_warehouse = await self.get(warehouse_id)
+        if not existing_warehouse:
+            raise NotFoundExcept(
+                f"Warehouse with id of {warehouse_id}"
+            )
         updates = update_data.model_dump()
         return await self.update({"id": warehouse_id}, updates)
 
     async def delete_warehouse(self, warehouse_id: int):
         warehouse = self.get_warehouse(warehouse_id=warehouse_id)
         if warehouse is None:
-            raise ValueError("Warehouse Does not exisit")
+            raise NotFoundExcept(
+                f"Warehouse with id of {warehouse_id}"
+            )
         return await self.delete(id=warehouse_id)
 

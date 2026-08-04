@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 
 from app.api.dependencies import CurrentUserDeps, ProductServiceDeps
 from app.api.schemas.product import ProductCreate, ProductResponse, ProductUpdate
@@ -20,7 +20,15 @@ async def get_product(
     service: ProductServiceDeps,
     current_user: CurrentUserDeps
 ):
-    return await service.get(product_id)
+
+    product = await service.get(product_id)
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not found"
+
+        )
+    return product
 
 
 @router.post("/", response_model=ProductResponse)
@@ -29,7 +37,8 @@ async def create_product(
     service: ProductServiceDeps,
     current_user: CurrentUserDeps
 ):
-    return await service.create_product(product_data)
+    new_product = await service.create_product(product_data)
+    return new_product
 
 
 @router.put("/{product_id}", response_model=ProductResponse)

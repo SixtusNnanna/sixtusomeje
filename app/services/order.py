@@ -4,6 +4,7 @@ from app.services.base import BaseService
 from app.services.inventory import InventoryService
 from app.core.enum import OrderStatus
 from decimal import Decimal
+from app import exceptions
 
 
 class OrderService(BaseService[Order]):
@@ -45,9 +46,9 @@ class OrderService(BaseService[Order]):
     async def complete_order(self, order_id: int):
         order = await self.get(id=order_id)
         if order is None:
-            raise ValueError("Order is not Found")
+            raise exceptions.NotFoundExcept("Order")
         if order.status != OrderStatus.PENDING:
-            raise ValueError("Cannot continue this order")
+            raise exceptions.StatusCompletedError
         for item in order.order_items:
             allocations = await self.inventory.allocate_stock(
                 item.product_id, item.quantity

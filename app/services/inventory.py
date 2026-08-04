@@ -2,6 +2,7 @@ from sqlalchemy import select
 from app.databaase.models import Inventory
 from app.api.schemas.inventory import InventoryCreate
 from app.services.base import BaseService
+from app.exceptions import NotFoundExcept, ExistException,NotZeroError, SameWareHouseTransferError, InSufficentStockError
 
 
 class InventoryService(BaseService[Inventory]):
@@ -9,24 +10,37 @@ class InventoryService(BaseService[Inventory]):
         super().__init__(session, Inventory)
 
     async def get_inventories_of_product(self, product_id):
-        return await self.list(product_id=product_id)
+        inventory = await self.list(product_id=product_id)
+        if not inventory:
+            raise NotFoundExcept("Inventory")
+        return inventory
 
     async def list_inventory(self, offset: int, limit: int):
         return await self.list(offset_val=offset, limit_val=limit)
 
     async def create_inventory(self, inventory_data: InventoryCreate):
+        existing_inventory = await self.get_item(
+            product_id=inventory_data.product_id,
+            warehouse_id=inventory_data.warehouse_id
+        )
+        if existing_inventory:
+            raise ExistException(
+                "Inventory"
+            )
         new_inventory = Inventory(**inventory_data.model_dump())
         return await self.add(new_inventory)
 
     async def get_inventory(self, product_id: int, warehouse_id: int):
         result = await self.get_item(product_id=product_id, warehouse_id=warehouse_id)
         if result is None:
-            return None
+            raise NotFoundExcept(
+                "Inventory"
+            )
         return result
 
     async def increase_stock(self, warehouse_id, product_id, quantity):
         if quantity <= 0:
-            raise ValueError("Quantity must be greater than zero")
+            raise NotZeroError
         inventory = await self.get_inventory(product_id, warehouse_id)
 
         if not inventory:
@@ -46,11 +60,11 @@ class InventoryService(BaseService[Inventory]):
             self, warehouse_id: int, product_id: int, quantity: int
             ):
         if quantity <= 0:
-            raise ValueError("Quantity must be greater than zero")
+            raise NotZeroError
 
         inventory = await self.get_inventory(product_id, warehouse_id)
         if not inventory:
-            raise ValueError("Inventory not found")
+            raise NotFoundExcept("Inventory")
         inventory.quantity -= quantity
         await self.session.commit()
         await self.session.refresh(inventory)
@@ -64,15 +78,15 @@ class InventoryService(BaseService[Inventory]):
             quantity
             ):
         if source_warehouse_id == destination_warehouse_id:
-            raise ValueError("Cannot transfer to same warehouse")
+            raise SameWareHouseTransferError
 
         source = await self.get_inventory(product_id, source_warehouse_id)
 
         if not source:
-            raise ValueError("Source inventory not found")
+            raise NotFoundExcept("Source")
 
         if source.quantity < quantity:
-            raise ValueError("Insufficient Stock")
+            raise InSufficentStockError
 
         destination = await self.get_inventory(
             product_id, destination_warehouse_id
@@ -118,7 +132,7 @@ class InventoryService(BaseService[Inventory]):
 
         total_available = sum(inv.quantity for inv in candidates)
         if total_available < quantity_needed:
-            raise ValueError("Insufficent Stock Available")
+            raise InSufficentStockError
 
         allocations: list[tuple[int, int]] = []
         remaining = quantity_needed
@@ -131,10 +145,6 @@ class InventoryService(BaseService[Inventory]):
             remaining -= take
 
         return allocations
-
-
-
-
 
 
 
